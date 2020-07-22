@@ -1,0 +1,28 @@
+[
+  {
+    id: '1',
+    title: 'Article 1',
+    link: 'article1',
+    img: '#',
+    description:
+      'Lorem ipsum dolor sit amet consectetur adipisicing elit. Eius, accusamus veritatis aut harum sunt dolore impedit reiciendis quidem doloremque doloribus qui dicta similique ab quisquam odit tenetur blanditiis voluptate eligendi.',
+    content:
+      'Lorem ipsum dolor, sit amet consectetur adipisicing elit. Obcaecati ipsam tempora ab voluptatibus velit non porro quod at voluptatum qui, minus quaerat delectus placeat sapiente rem, necessitatibus eligendi, a omnis?Vero sit cupiditate deleniti repudiandae quis molestias minima, ipsa reiciendis incidunt aperiam quasi ipsum unde maiores suscipit nihil fuga temporibus consectetur qui, quaerat id impedit. Excepturi necessitatibus voluptas fugit tenetur!',
+    books: [],
+    subAreas: [],
+    articles: [],
+  },
+  {
+    id: '2',
+    title: 'Article 2',
+    link: 'article2',
+    img: '#',
+    description:
+      'Lorem ipsum dolor sit amet consectetur adipisicing elit. Eius, accusamus veritatis aut harum sunt dolore impedit reiciendis quidem doloremque doloribus qui dicta similique ab quisquam odit tenetur blanditiis voluptate eligendi.',
+    content:
+      'Lorem ipsum dolor, sit amet consectetur adipisicing elit. Obcaecati ipsam tempora ab voluptatibus velit non porro quod at voluptatum qui, minus quaerat delectus placeat sapiente rem, necessitatibus eligendi, a omnis?Vero sit cupiditate deleniti repudiandae quis molestias minima, ipsa reiciendis incidunt aperiam quasi ipsum unde maiores suscipit nihil fuga temporibus consectetur qui, quaerat id impedit. Excepturi necessitatibus voluptas fugit tenetur!',
+    books: [],
+    subAreas: [],
+    articles: [],
+  },
+];
