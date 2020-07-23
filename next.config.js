@@ -1,6 +1,3 @@
-// const withBundleAnalyzer = require('@next/bundle-analyzer')({
-//   enabled: process.env.ANALYZE === 'true',
-// });
 module.exports = {
   webpack(config, options) {
     config.module.rules.push({
@@ -8,11 +5,13 @@ module.exports = {
       exclude: /node_modules/,
       use: [options.defaultLoaders.babel, { loader: 'graphql-let/loader' }],
     });
+
     config.module.rules.push({
       test: /\.graphqls$/,
       exclude: /node_modules/,
       use: ['graphql-tag/loader', 'graphql-let/schema/loader'],
     });
+
     return config;
   },
 };

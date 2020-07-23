@@ -40,6 +40,7 @@
     "google-spreadsheet": "^3.0.11",
     "googleapis": "^55.0.0",
     "graphql": "^15.3.0",
+    "graphql-hooks": "^4.5.0",
     "graphql-tag": "^2.10.4",
     "immer": "^7.0.5",
     "next": "^9.4.4",

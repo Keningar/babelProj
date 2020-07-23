@@ -1,25 +1,9 @@
-type Book {
-  id: Int
-  cover: String
-  link: String
-}
-
-type Article {
-  id: Int
-  title: String
-  link: String
-  img: String
-  description: String
-  content: String
-  books: [Book]
-  subAreas: [Article]
-  articles: [Article]
+type User {
+  id: ID!
+  name: String!
+  status: String!
 }
 
 type Query {
-  getArticles(link: String): Article!
+  viewer: User!
 }
-
-# type Mutation {
-#   setArticle(input: Article!): Article!
-# }
