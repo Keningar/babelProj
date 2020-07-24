@@ -10,6 +10,7 @@ const getApolloServerHandler = async () => {
   if (!apolloServerHandler) {
     const schema = await buildSchema({
       resolvers: [ArticleResolver],
+      validate: false,
     });
     apolloServerHandler = new ApolloServer({ schema }).createHandler({
       path: '/api/graphql',

@@ -121,7 +121,6 @@ class SheetConnection {
     let wsId = SheetConnection.getWorksheetID(
       info.constructor as typeof AbstractModel
     );
-    console.log('till this work');
     await this.designer.updateParsedRow(wsId, rId, pR);
 
     return info;
