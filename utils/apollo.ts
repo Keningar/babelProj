@@ -2,8 +2,6 @@ import { IncomingMessage, ServerResponse } from 'http';
 import { useMemo } from 'react';
 import { ApolloClient } from 'apollo-client';
 import { InMemoryCache, NormalizedCacheObject } from 'apollo-cache-inmemory';
-import { buildSchemaSync } from 'type-graphql';
-import ArticleResolver from '@graphql_p/resolvers/articles';
 
 let apolloClient: ApolloClient<NormalizedCacheObject> | undefined;
 
@@ -12,26 +10,10 @@ export type ResolverContext = {
   res?: ServerResponse;
 };
 
-function createIsomorphLink(context: ResolverContext = {}) {
-  if (typeof window === 'undefined') {
-    const { SchemaLink } = require('apollo-link-schema');
-    const { schema } = require('@graphql_p/schema');
-    return new SchemaLink({ schema, context });
-  } else {
-    const { HttpLink } = require('apollo-link-http');
-    return new HttpLink({
-      uri: '/api/graphql',
-      credentials: 'same-origin',
-    });
-  }
-}
-
 // function createIsomorphLink(context: ResolverContext = {}) {
 //   if (typeof window === 'undefined') {
 //     const { SchemaLink } = require('apollo-link-schema');
-//     const schema = buildSchemaSync({
-//       resolvers: [ArticleResolver],
-//     });
+//     const { schema } = require('@graphql_p/schema');
 //     return new SchemaLink({ schema, context });
 //   } else {
 //     const { HttpLink } = require('apollo-link-http');
@@ -41,6 +23,25 @@ function createIsomorphLink(context: ResolverContext = {}) {
 //     });
 //   }
 // }
+
+function createIsomorphLink(context: ResolverContext = {}) {
+  if (typeof window === 'undefined') {
+    const { SchemaLink } = require('apollo-link-schema');
+    //TODO find out about the problem with 'chokidar' and 'child_process' that was corrected by importing these librarys here ⮧
+    const { buildSchemaSync } = require('type-graphql');
+    const ArticleResolver = require('@graphql_p/resolvers/articles');
+    const schema = buildSchemaSync({
+      resolvers: [ArticleResolver],
+    });
+    return new SchemaLink({ schema, context });
+  } else {
+    const { HttpLink } = require('apollo-link-http');
+    return new HttpLink({
+      uri: '/api/graphql',
+      credentials: 'same-origin',
+    });
+  }
+}
 
 function createApolloClient(context?: ResolverContext) {
   return new ApolloClient({

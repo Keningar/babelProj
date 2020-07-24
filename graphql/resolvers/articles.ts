@@ -9,7 +9,7 @@ import {
   InputType,
 } from 'type-graphql';
 import { dbConnect } from '@db_p/SheetConection';
-import { getUserInstance, User as UserIns } from '@db_p/models/User';
+import { User as UserIns } from '@db_p/models/User';
 
 @ObjectType()
 class Book {
@@ -83,19 +83,6 @@ export default class ArticleResolver {
   async getUsers() {
     let dbInstance = await dbConnect();
     return await dbInstance.getInfos(UserIns);
-  }
-
-  @Query(returns => User)
-  async prueba() {
-    let dbInstance = await dbConnect();
-    // let UserInstance = new UserIns();
-    // global.models.forEach(model => {
-    //   let workSheetId = SheetConnection.getWorksheetID(model);
-    //   console.log(workSheetId);
-    // });
-    dbInstance.validateModels();
-    console.log(global.models.length);
-    return { username: 'P', email: 'P@gmain.com', fullname: 'PP' };
   }
 
   @Mutation(returns => User)

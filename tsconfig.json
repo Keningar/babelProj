@@ -15,7 +15,7 @@
     "jsx": "preserve",
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
-    "baseUrl": ".",
+    "baseUrl": "./",
     "paths": {
       "@utils_p/*": ["utils/*"],
       "@components_p/*": ["components/*"],
