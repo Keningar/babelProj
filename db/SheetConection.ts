@@ -15,8 +15,8 @@ export const dbConnect = async () => {
   /* connecting to our database */
   sheetConnection = await SheetConnection.connect(
     {
-      spreadsheetId: '1HFDH7e0CAAGfGUHIY7FgkQErDEa5HtXLY8xPqLfl5Hs',
-      migrate: 'safe',
+      spreadsheetId: '1LMqdyb0NWdEqWbg-zdrASuG-D9mH9Dur8LYjm1YMs0s',
+      migrate: 'drop',
     },
     credentials.client_email,
     credentials.private_key,

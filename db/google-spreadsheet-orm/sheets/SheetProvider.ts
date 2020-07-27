@@ -21,6 +21,35 @@ export abstract class SheetProvider {
     });
     return axiosResponse.data;
   }
+
+  /**
+   * Sends a formula and retrive its value
+   * @param range A1 notation of where formula is going to be placed
+   */
+  async getFormula(range: string, query: string): Promise<any[][]> {
+    try {
+      return (
+        await sheets.spreadsheets.values.batchUpdate({
+          spreadsheetId: this.config.spreadsheetId,
+          auth: this.config.authClient,
+          requestBody: {
+            valueInputOption: 'USER_ENTERED', //USER_ENTERED
+            includeValuesInResponse: true,
+            data: [
+              {
+                range,
+                majorDimension: 'COLUMNS',
+                values: [[query]],
+              },
+            ],
+          },
+        })
+      ).data.responses[0].updatedData.values;
+    } catch (err) {
+      console.error('error with the new function -> ', err);
+    }
+  }
+
   async updateData(writerRanges: sheets_v4.Schema$DataFilterValueRange[]) {
     let axiosRepsonse = await sheets.spreadsheets.values.batchUpdateByDataFilter(
       {

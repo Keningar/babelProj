@@ -29,7 +29,7 @@ function createIsomorphLink(context: ResolverContext = {}) {
     const { SchemaLink } = require('apollo-link-schema');
     //TODO find out about the problem with 'chokidar' and 'child_process' that was corrected by importing these librarys here ⮧
     const { buildSchemaSync } = require('type-graphql');
-    const ArticleResolver = require('@graphql_p/resolvers/articles');
+    const ArticleResolver = require('@graphql_p/resolvers/articlesResolvers');
     //TODO See if this no will be a potencial perform problem
     const schema = buildSchemaSync({
       resolvers: [ArticleResolver],

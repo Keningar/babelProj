@@ -9,7 +9,14 @@ export type SchemaColumns = string[];
  * @param  {string} key
  */
 export const column = (target: AbstractModel, key: string) => {
-  let colMeta = SheetConnection.getModelCollumns(target.constructor as typeof AbstractModel);
+  let colMeta = SheetConnection.getModelCollumns(
+    target.constructor as typeof AbstractModel
+  );
+  // The split method is for make it compatible with the quote('?') in the name of the options for typeGraphql
+  // colMeta.push(key.split('?')[0]);
   colMeta.push(key);
-  SheetConnection.setModeCollumns(target.constructor as typeof AbstractModel, colMeta);
+  SheetConnection.setModeCollumns(
+    target.constructor as typeof AbstractModel,
+    colMeta
+  );
 };

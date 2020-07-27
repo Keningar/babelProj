@@ -141,23 +141,36 @@ class SheetConnection {
       infoConstructor as typeof AbstractModel
     );
 
-    let data = await this.designer.readData({
-      includeGridData: true,
-      dataFilters: cols.map<sheets_v4.Schema$DataFilter>(col => {
-        return {
-          developerMetadataLookup: {
-            metadataKey: 'colname',
-            metadataValue: col,
-            locationType: 'COLUMN',
-            metadataLocation: {
-              sheetId: wsId,
+    let prows: ParsedRow[];
+
+    if (where) {
+      let lastColLetter = String.fromCharCode(65 + cols.length - 1);
+      let SheetForSearchName = 'Articles';
+      let sheetSearchOperation = `Operations!A1:${lastColLetter}`;
+      let query = this.getQuery(cols, SheetForSearchName, where);
+      let data = await this.designer.getFormula(sheetSearchOperation, query);
+      prows = this.parseRowsFromGetFormula(data);
+      console.log(prows);
+    } else {
+      let data = await this.designer.readData({
+        includeGridData: true,
+        dataFilters: cols.map<sheets_v4.Schema$DataFilter>(col => {
+          return {
+            developerMetadataLookup: {
+              metadataKey: 'colname',
+              metadataValue: col,
+              locationType: 'COLUMN',
+              metadataLocation: {
+                sheetId: wsId,
+              },
             },
-          },
-        };
-      }),
-    });
-    let prows = this.parseRowsFromMetaFilter(data.sheets[0]);
-    if (where) prows = this.applyWhere(prows, where);
+          };
+        }),
+      });
+      prows = this.parseRowsFromMetaFilter(data.sheets[0]);
+    }
+
+    // if (where) prows = this.applyWhere(prows, where);
     // fill to object
     return prows.map(prow => {
       let ne = new (infoConstructor as any)();
@@ -165,6 +178,36 @@ class SheetConnection {
       return ne;
     });
   }
+
+  /**
+   * Funtion that retives a query spreadSheet format
+   * @param cols arrays of colums
+   * @param formulaSheetName the name of the sheet where the formulas going to be placed
+   * @param where object of conditions
+   */
+  private getQuery(
+    cols: SchemaColumns,
+    SheetForSearchName: string,
+    where: WhereCondition
+  ): string {
+    let lastColLetter = String.fromCharCode(65 + cols.length - 1);
+    let rulesNames = Object.keys(where);
+    let conditions: string[] = [];
+    let SheetForSearch = `${SheetForSearchName}!A1:${lastColLetter}`;
+
+    rulesNames.forEach(ruleName => {
+      // ASCII code 65-90 [A-Z] and 97-122 [a-z]
+      let colLetter = String.fromCharCode(65 + cols.indexOf(ruleName));
+      let rule = where[ruleName];
+      if (typeof rule !== 'function')
+        conditions.push(`${colLetter} = \'${rule}\'`);
+    });
+
+    return `=QUERY(${SheetForSearch}, " SELECT * WHERE ${conditions.join(
+      ' AND '
+    )} ", 1)`;
+  }
+
   /**
    * Applies where condition on the queried data, because GSheets cannot Where by value
    * @param  {ParsedRow[]} pRows
@@ -239,7 +282,25 @@ class SheetConnection {
     return pRows;
   }
   /**
-   * Lists all collumns in model
+   * Creates parsed rows collection based on query formula output
+   * @param  {sheets_v4.Schema$Sheet} sheet
+   */
+  private parseRowsFromGetFormula(Colums: any[][]) {
+    let pRows: ParsedRow[] = [];
+    let rowCount = Math.max(...Colums.map(col => col.length));
+    for (let i = 1; i < rowCount; i++) {
+      let nr: ParsedRow = {};
+      Colums.forEach(col => {
+        nr[col[0]] = col[i];
+        nr.rowId = i;
+      });
+      pRows.push(nr);
+    }
+
+    return pRows;
+  }
+  /**
+   * Lists all collumns in model from metadata
    * @param  {typeofAbstractModel} modelConstructor
    * @returns SchemaColumns
    */
@@ -250,7 +311,7 @@ class SheetConnection {
       []) as SchemaColumns).slice(0);
   }
   /**
-   * Sets new collumn colleciton to model
+   * Sets new collumn colleciton to model with metadata
    * @param  {typeofAbstractModel} modelConstructor
    * @param  {SchemaColumns} collumns
    */
@@ -261,7 +322,7 @@ class SheetConnection {
     Reflect.defineMetadata('schema:collumns', collumns, modelConstructor);
   }
   /**
-   * Gets worksheed ID of model
+   * Gets worksheed ID of model from metadata
    * @param  {typeofAbstractModel} modelConstructor
    * @returns number
    */
@@ -269,7 +330,7 @@ class SheetConnection {
     return Number(Reflect.getMetadata('schema:workSheetId', modelConstructor));
   }
   /**
-   * Sets worksheed ID to model
+   * Sets worksheed ID to model with metadata
    * @param  {typeofAbstractModel} modelConstructor
    * @param  {number} worksheedId
    */
