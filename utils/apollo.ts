@@ -10,20 +10,6 @@ export type ResolverContext = {
   res?: ServerResponse;
 };
 
-// function createIsomorphLink(context: ResolverContext = {}) {
-//   if (typeof window === 'undefined') {
-//     const { SchemaLink } = require('apollo-link-schema');
-//     const { schema } = require('@graphql_p/schema');
-//     return new SchemaLink({ schema, context });
-//   } else {
-//     const { HttpLink } = require('apollo-link-http');
-//     return new HttpLink({
-//       uri: '/api/graphql',
-//       credentials: 'same-origin',
-//     });
-//   }
-// }
-
 function createIsomorphLink(context: ResolverContext = {}) {
   if (typeof window === 'undefined') {
     const { SchemaLink } = require('apollo-link-schema');

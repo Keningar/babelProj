@@ -73,7 +73,8 @@ class SheetConnection {
   async validateModels() {
     await Promise.all(
       global.models.map(async model => {
-        let workSheetId = SheetConnection.getWorksheetID(model.target);
+        // let workSheetId = SheetConnection.getWorksheetID(model.target);
+        let workSheetId = model.id;
         let colMeta = SheetConnection.getModelCollumns(model.target);
 
         let cols = await this.designer.getCollumns(workSheetId);
@@ -101,6 +102,19 @@ class SheetConnection {
       })
     );
   }
+
+  /**
+   * clear models properties in the spreadSheet
+   * @param  {typeofAbstractModel[]} ...models
+   */
+  async wipeInfo(info: typeof AbstractModel) {
+    let cols = SheetConnection.getModelCollumns(info);
+    let wsId = SheetConnection.getWorksheetID(info);
+
+    await this.designer.clearWorksheet(wsId);
+    await this.designer.setCollumns(wsId, cols);
+  }
+
   /**
    * Writes specific infot to database to its position marked by rowId
    * @param  {T} info
@@ -111,9 +125,14 @@ class SheetConnection {
 
     // if rowid is missing append it to the end
     if (!(rId && rId > 0)) {
-      let infos = await this.getInfos(info.constructor as any);
-      let indexes = infos.map(info => Number(info.rowId) || 0);
-      let max = indexes.length ? Math.max(...indexes) : 0;
+      // let infos = await this.getInfos(info.constructor as any);
+      // let indexes = infos.map(info => Number(info.rowId) || 0);
+      // let max = indexes.length ? Math.max(...indexes) : 0;
+      let wsName = SheetConnection.getworkSheetName(
+        info.constructor as typeof AbstractModel
+      );
+      let max = await this.designer.getLastRow('Operations!A1', wsName);
+      console.log('setInfo Sheet name: ', wsName, ' max row: ', max);
       rId = max + 1;
     }
 
@@ -132,7 +151,8 @@ class SheetConnection {
    */
   async getInfos<T extends AbstractModel>(
     infoConstructor: new () => T,
-    where?: WhereCondition
+    where?: WhereCondition,
+    infoConstructorfrom?: any
   ): Promise<T[]> {
     let cols = SheetConnection.getModelCollumns(
       infoConstructor as typeof AbstractModel
@@ -140,17 +160,29 @@ class SheetConnection {
     let wsId = SheetConnection.getWorksheetID(
       infoConstructor as typeof AbstractModel
     );
+    let wsName = SheetConnection.getworkSheetName(
+      infoConstructor as typeof AbstractModel
+    );
 
     let prows: ParsedRow[];
 
     if (where) {
       let lastColLetter = String.fromCharCode(65 + cols.length - 1);
-      let SheetForSearchName = 'Articles';
       let sheetSearchOperation = `Operations!A1:${lastColLetter}`;
-      let query = this.getQuery(cols, SheetForSearchName, where);
+      let query: string;
+
+      if (infoConstructorfrom) {
+        let wsFromName = SheetConnection.getworkSheetName(
+          infoConstructorfrom as typeof AbstractModel
+        );
+        console.log(wsFromName);
+        query = this.getQuery(where, cols, wsName, wsFromName);
+      } else {
+        query = this.getQuery(where, cols, wsName);
+      }
       let data = await this.designer.getFormula(sheetSearchOperation, query);
       prows = this.parseRowsFromGetFormula(data);
-      console.log(prows);
+      console.log(query);
     } else {
       let data = await this.designer.readData({
         includeGridData: true,
@@ -178,7 +210,6 @@ class SheetConnection {
       return ne;
     });
   }
-
   /**
    * Funtion that retives a query spreadSheet format
    * @param cols arrays of colums
@@ -186,26 +217,41 @@ class SheetConnection {
    * @param where object of conditions
    */
   private getQuery(
+    where: WhereCondition,
     cols: SchemaColumns,
     SheetForSearchName: string,
-    where: WhereCondition
+    SheetForSearchFromName?: string
   ): string {
-    let lastColLetter = String.fromCharCode(65 + cols.length - 1);
-    let rulesNames = Object.keys(where);
+    const lastColLetter = String.fromCharCode(65 + cols.length - 1);
+    const SheetForSearch = `${SheetForSearchName}!A1:${lastColLetter}`;
+
+    const rulesNames = Object.keys(where);
     let conditions: string[] = [];
-    let SheetForSearch = `${SheetForSearchName}!A1:${lastColLetter}`;
+    let conditionForm: string;
 
     rulesNames.forEach(ruleName => {
-      // ASCII code 65-90 [A-Z] and 97-122 [a-z]
-      let colLetter = String.fromCharCode(65 + cols.indexOf(ruleName));
-      let rule = where[ruleName];
-      if (typeof rule !== 'function')
-        conditions.push(`${colLetter} = \'${rule}\'`);
+      const conditionMatch = ruleName.match(/id_\w+/)?.[0];
+      conditionForm = conditionForm ?? conditionMatch;
+
+      if (!conditionMatch) {
+        // ASCII code 65-90 [A-Z] and 97-122 [a-z]
+        let colLetter = String.fromCharCode(65 + cols.indexOf(ruleName));
+        let rule = where[ruleName];
+        if (typeof rule !== 'function')
+          conditions.push(`${colLetter} = \'${rule}\'`);
+      }
     });
 
-    return `=QUERY(${SheetForSearch}, " SELECT * WHERE ${conditions.join(
-      ' AND '
-    )} ", 1)`;
+    if (!SheetForSearchFromName)
+      return `=QUERY(${SheetForSearch}, " SELECT * WHERE ${conditions.join(
+        ' AND '
+      )} ", 1)`;
+
+    return `=QUERY(${SheetForSearch}, "SELECT * WHERE (A = \'onlyForFunctionality\'" & CONCATENAR(ARRAYFORMULA(" OR A = \'"& QUERY(${SheetForSearchFromName}!A1:B, "SELECT B WHERE A=\'${
+      where[conditionForm]
+    }\'", 0) & "\' ")) &") ${
+      conditions.length !== 0 ? ' AND ' + conditions.join(' AND ') : ''
+    } ", 1)`;
   }
 
   /**
@@ -340,7 +386,13 @@ class SheetConnection {
   ) {
     Reflect.defineMetadata('schema:workSheetId', worksheedId, modelConstructor);
   }
-
+  /**
+   * Gets workSheet Name of model from metadata
+   * @param modelConstructor
+   */
+  static getworkSheetName(modelConstructor: typeof AbstractModel): string {
+    return Reflect.getMetadata('schema:workSheetName', modelConstructor);
+  }
   static getAuthClient(email: string, key: any, keyId: any, scopes?: string[]) {
     return new google.auth.JWT({
       email: email,

@@ -50,6 +50,37 @@ export abstract class SheetProvider {
     }
   }
 
+  /**
+   * Retrive the number of last row where is find data of the given model, this method works if the getLastRow function is defined in the sheet
+   * @param range A1 Notation where the formula is going to be placed
+   * @param worksheetId
+   */
+  async getLastRow(range: string, worksheetName: string): Promise<number> {
+    try {
+      return Number(
+        (
+          await sheets.spreadsheets.values.batchUpdate({
+            spreadsheetId: this.config.spreadsheetId,
+            auth: this.config.authClient,
+            requestBody: {
+              valueInputOption: 'USER_ENTERED', //USER_ENTERED
+              includeValuesInResponse: true,
+              data: [
+                {
+                  range,
+                  majorDimension: 'COLUMNS',
+                  values: [[`=getLastRow("${worksheetName}")-1`]],
+                },
+              ],
+            },
+          })
+        ).data.responses[0].updatedData.values[0][0]
+      );
+    } catch (err) {
+      console.error('error with the new function -> ', err);
+    }
+  }
+
   async updateData(writerRanges: sheets_v4.Schema$DataFilterValueRange[]) {
     let axiosRepsonse = await sheets.spreadsheets.values.batchUpdateByDataFilter(
       {

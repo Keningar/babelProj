@@ -3,6 +3,7 @@ import { ApolloServer } from 'apollo-server-micro';
 import { buildSchema } from 'type-graphql';
 import ArticleResolver from '@graphql_p/resolvers/articlesResolvers';
 import { NextApiRequest, NextApiResponse } from 'next';
+import path from 'path';
 
 let apolloServerHandler: (req: any, res: any) => Promise<void>;
 
@@ -11,6 +12,7 @@ const getApolloServerHandler = async () => {
     const schema = await buildSchema({
       resolvers: [ArticleResolver],
       validate: false,
+      emitSchemaFile: './__snapshots__/schema/schema.gql',
     });
     apolloServerHandler = new ApolloServer({ schema }).createHandler({
       path: '/api/graphql',
